@@ -1,0 +1,31 @@
+#!/bin/sh
+
+ANSIBLE_VIRTUAL_ENV="$(cat .python-version)"
+ANSIBLE_PYTHON_VERSION="3.6.5"
+
+run_with_echo() {
+  echo "> $*"
+  eval "$*"
+}
+
+tmp="$(pyenv versions | grep "$ANSIBLE_PYTHON_VERSION" | sed 's/*//' | head -n  1 | awk '{print $1}')"
+if [ "$ANSIBLE_PYTHON_VERSION" = "$tmp" ]; then
+  echo "python $ANSIBLE_PYTHON_VERSION found"
+else
+  echo "python $ANSIBLE_PYTHON_VERSION not found"
+  run_with_echo "pyenv install $ANSIBLE_PYTHON_VERSION"
+fi
+
+tmp="$(pyenv virtualenvs | grep "$ANSIBLE_VIRTUAL_ENV" | sed 's/*//' | tail -n 1 | awk '{print $1}')"
+if [ "$ANSIBLE_VIRTUAL_ENV" = "$tmp" ]; then
+  echo "virtualenv: $ANSIBLE_VIRTUAL_ENV found"
+else
+  echo "virtualenv: $ANSIBLE_VIRTUAL_ENV not found"
+  run_with_echo "pyenv virtualenv $ANSIBLE_PYTHON_VERSION $ANSIBLE_VIRTUAL_ENV"
+fi
+
+run_with_echo "pyenv local $ANSIBLE_VIRTUAL_ENV"
+pyenv rehash
+
+run_with_echo "pip install -r requirements.txt"
+pyenv rehash
